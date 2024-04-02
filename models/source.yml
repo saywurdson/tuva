@@ -1,0 +1,60 @@
+version: 2
+
+sources:
+  - name: bcda
+    database: claims
+    schema: bcda
+    tables:
+      - name: coverage
+      - name: explanationofbenefit
+      - name: patient
+  
+  - name: desynpuf
+    database: claims
+    schema: desynpuf
+    tables:
+      - name: beneficiary
+      - name: carrier
+      - name: inpatient
+      - name: outpatient
+      - name: pde
+
+  - name: ffs
+    database: claims
+    schema: ffs
+    tables:
+      - name: beneficiary
+      - name: carrier
+      - name: dme
+      - name: hha
+      - name: hospice
+      - name: inpatient
+      - name: outpatient
+      - name: pde
+      - name: snf
+
+  - name: tx
+    database: claims
+    schema: tx
+    tables:
+      - name: institutional_header
+      - name: institutional_detail
+      - name: professional_header
+      - name: professional_detail
+      - name: pharmacy_header
+      - name: pharmacy_detail
+
+  - name: vocabulary
+    database: claims
+    schema: vocabulary
+    tables:
+      - name: concept
+      - name: concept_cpt4
+      - name: concept_ancestor
+      - name: concept_synonym
+      - name: concept_class
+      - name: concept_relationship
+      - name: domain
+      - name: relationship
+      - name: vocabulary
+      - name: drug_strength

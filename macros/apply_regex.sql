@@ -6,7 +6,7 @@
 
 {%- macro default__apply_regex(column_name, regex) -%}
 
-    regexp_like({{ column_name }}, '{{ regex}}')
+    {{ column_name }} ~ '{{ regex }}'
 
 {%- endmacro -%}
 

@@ -38,7 +38,10 @@
     from
         read_csv('s3://{{ uri }}/{{ pattern }}*',
         {% if null_marker == true %} nullstr = '\N' {% else %} nullstr = '' {% endif %},
+         auto_detect=true,
          header=true,
+         sample_size=-1,
+         ignore_errors=1,
          columns= { {{ cols }} } )
 
 {% endset %}
