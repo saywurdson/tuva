@@ -1,5 +1,13 @@
 -- models/pharmacy_claim.sql
 
+{% set exists_pharmacy_header_current = check_table_exists('tx', 'pharmacy_header_current') %}
+{% set exists_pharmacy_detail_current = check_table_exists('tx', 'pharmacy_detail_current') %}
+{% set exists_pharmacy_header_historical = check_table_exists('tx', 'pharmacy_header_historical') %}
+{% set exists_pharmacy_detail_historical = check_table_exists('tx', 'pharmacy_detail_historical') %}
+{% set exists_pde = check_table_exists('ffs', 'pde') %}
+{% set exists_d_pde = check_table_exists('desynpuf', 'd_pde') %}
+
+{% if exists_pharmacy_header_current and exists_pharmacy_detail_current %}
 SELECT DISTINCT
     CAST(headerc.bill_id AS VARCHAR) AS claim_id,
     CAST(detailc.line_number AS INTEGER) AS claim_line_number,
@@ -23,7 +31,9 @@ SELECT DISTINCT
     'Texas Department of Insurance, Division of Workers Compensation (DWC)' AS data_source
 FROM {{ source('tx', 'pharmacy_header_current') }} headerc
 LEFT JOIN {{ source('tx', 'pharmacy_detail_current') }} detailc ON headerc.bill_id = detailc.bill_id
+{% endif %}
 
+{% if exists_pharmacy_header_historical and exists_pharmacy_detail_historical %}
 UNION
 
 SELECT DISTINCT
@@ -49,7 +59,9 @@ SELECT DISTINCT
     'Texas Department of Insurance, Division of Workers Compensation (DWC)' AS data_source
 FROM {{ source('tx', 'pharmacy_header_historical') }} headerh
 LEFT JOIN {{ source('tx', 'pharmacy_detail_historical') }} detailh ON headerh.bill_id = detailh.bill_id
+{% endif %}
 
+{% if exists_pde %}
 UNION
 
 SELECT DISTINCT
@@ -112,3 +124,31 @@ SELECT DISTINCT
     CAST(NULL AS FLOAT) AS deductible_amount,
     'CMS Synthetic Medicare Enrollment, Fee-for-Service Claims, and Prescription Drug Event Data' AS data_source
 FROM {{ source('ffs', 'pde') }} pde
+{% endif %}
+
+{% if exists_d_pde %}
+UNION
+
+SELECT DISTINCT
+    CAST(d_pde.PDE_ID AS VARCHAR) AS claim_id,
+    1 AS claim_line_number,
+    CAST(d_pde.DESYNPUF_ID AS VARCHAR) AS patient_id,
+    CAST(NULL AS VARCHAR) AS member_id,
+    CAST(NULL AS VARCHAR) AS payer,
+    CAST(NULL AS VARCHAR) AS plan,
+    CAST(NULL AS VARCHAR) AS prescribing_provider_npi,
+    CAST(NULL AS VARCHAR) AS dispensing_provider_npi,
+    CAST(SUBSTR(d_pde.SRVC_DT, 1, 4) || '-' || SUBSTR(d_pde.SRVC_DT, 5, 2) || '-' || SUBSTR(d_pde.SRVC_DT, 7, 2) AS DATE) AS dispensing_date,
+    CAST(d_pde.PROD_SRVC_ID AS VARCHAR) AS ndc_code,
+    CAST(d_pde.QTY_DSPNSD_NUM AS INTEGER) AS quantity,
+    CAST(d_pde.DAYS_SUPLY_NUM AS INTEGER) AS days_supply,
+    CAST(NULL AS INTEGER) AS refills,
+    CAST(SUBSTR(d_pde.SRVC_DT, 1, 4) || '-' || SUBSTR(d_pde.SRVC_DT, 5, 2) || '-' || SUBSTR(d_pde.SRVC_DT, 7, 2) AS DATE) AS paid_date,
+    CAST(d_pde.PTNT_PAY_AMT AS FLOAT) AS paid_amount,
+    CAST(d_pde.TOT_RX_CST_AMT AS FLOAT) AS allowed_amount,
+    CAST(NULL AS FLOAT) AS coinsurance_amount,
+    CAST(NULL AS FLOAT) AS copayment_amount,
+    CAST(NULL AS FLOAT) AS deductible_amount,
+    'CMS 2008-2010 Data Entrepreneurs Synthetic Public Use File (DE-SynPUF)' AS data_source
+FROM {{ source('desynpuf', 'pde') }} d_pde
+{% endif %}

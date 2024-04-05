@@ -1,5 +1,15 @@
 -- models/eligibility.sql
 
+{% set exists_institutional_header_current = check_table_exists('tx', 'institutional_header_current') %}
+{% set exists_institutional_header_historical = check_table_exists('tx', 'institutional_header_historical') %}
+{% set exists_professional_header_current = check_table_exists('tx', 'professional_header_current') %}
+{% set exists_professional_header_historical = check_table_exists('tx', 'professional_header_historical') %}
+{% set exists_pharmacy_header_current = check_table_exists('tx', 'pharmacy_header_current') %}
+{% set exists_pharmacy_header_historical = check_table_exists('tx', 'pharmacy_header_historical') %}
+{% set exists_beneficiary_ffs = check_table_exists('your_schema', 'beneficiary') %}
+{% set exists_beneficiary_desynpuf = check_table_exists('your_schema', 'beneficiary') %}
+
+{% if exists_institutional_header_current %}
 SELECT DISTINCT
     CAST(MD5(instc.employee_date_of_birth || instc.employee_gender_code) AS VARCHAR) AS patient_id,
     CAST(NULL AS VARCHAR) AS member_id,
@@ -29,7 +39,9 @@ SELECT DISTINCT
     CAST(NULL AS VARCHAR) AS phone,
     'Texas Department of Insurance, Division of Workers Compensation (DWC)' AS data_source
 FROM {{ source('tx', 'institutional_header_current') }} instc
+{% endif %}
 
+{% if exists_institutional_header_historical %}
 UNION
 
 SELECT DISTINCT
@@ -61,7 +73,9 @@ SELECT DISTINCT
     CAST(NULL AS VARCHAR) AS phone,
     'Texas Department of Insurance, Division of Workers Compensation (DWC)' AS data_source
 FROM {{ source('tx', 'institutional_header_historical') }} insth
+{% endif %}
 
+{% if exists_professional_header_current %}
 UNION
 
 SELECT DISTINCT
@@ -93,7 +107,9 @@ SELECT DISTINCT
     CAST(NULL AS VARCHAR) AS phone,
     'Texas Department of Insurance, Division of Workers Compensation (DWC)' AS data_source
 FROM {{ source('tx', 'professional_header_current') }} profc
+{% endif %}
 
+{% if exists_professional_header_historical %}
 UNION
 
 SELECT DISTINCT
@@ -125,7 +141,9 @@ SELECT DISTINCT
     CAST(NULL AS VARCHAR) AS phone,
     'Texas Department of Insurance, Division of Workers Compensation (DWC)' AS data_source
 FROM {{ source('tx', 'professional_header_historical') }} profh
+{% endif %}
 
+{% if exists_pharmacy_header_current %}
 UNION
 
 SELECT DISTINCT
@@ -157,7 +175,9 @@ SELECT DISTINCT
     CAST(NULL AS VARCHAR) AS phone,
     'Texas Department of Insurance, Division of Workers Compensation (DWC)' AS data_source
 FROM {{ source('tx', 'pharmacy_header_current') }} phc
+{% endif %}
 
+{% if exists_pharmacy_header_historical %}
 UNION
 
 SELECT DISTINCT
@@ -189,7 +209,9 @@ SELECT DISTINCT
     CAST(NULL AS VARCHAR) AS phone,
     'Texas Department of Insurance, Division of Workers Compensation (DWC)' AS data_source
 FROM {{ source('tx', 'pharmacy_header_historical') }} phh
+{% endif %}
 
+{% if exists_beneficiary_ffs %}
 UNION
 
 SELECT DISTINCT
@@ -374,7 +396,9 @@ SELECT DISTINCT
     CAST(NULL AS VARCHAR) AS phone,
     'CMS Synthetic Medicare Enrollment, Fee-for-Service Claims, and Prescription Drug Event Data' AS data_source
 FROM {{ source('ffs', 'beneficiary') }} ffs
+{% endif %}
 
+{% if exists_beneficiary_desynpuf %}
 UNION
 
 SELECT DISTINCT
@@ -489,3 +513,4 @@ SELECT DISTINCT
     CAST(NULL AS VARCHAR) AS phone,
     'CMS 2008-2010 Data Entrepreneurs Synthetic Public Use File (DE-SynPUF)' AS data_source
 FROM {{ source('desynpuf', 'beneficiary') }} desynpuf
+{% endif %}
