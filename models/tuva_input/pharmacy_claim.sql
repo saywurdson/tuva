@@ -49,3 +49,66 @@ SELECT DISTINCT
     'Texas Department of Insurance, Division of Workers Compensation (DWC)' AS data_source
 FROM {{ source('tx', 'pharmacy_header_historical') }} headerh
 LEFT JOIN {{ source('tx', 'pharmacy_detail_historical') }} detailh ON headerh.bill_id = detailh.bill_id
+
+UNION
+
+SELECT DISTINCT
+    CAST(pde.PDE_ID AS VARCHAR) AS claim_id,
+    1 AS claim_line_number,
+    CAST(pde.BENE_ID AS VARCHAR) AS patient_id,
+    CAST(NULL AS VARCHAR) AS member_id,
+    CAST(NULL AS VARCHAR) AS payer,
+    CAST(NULL AS VARCHAR) AS plan,
+    CAST(pde.PRSCRBR_ID AS VARCHAR) AS prescribing_provider_npi,
+    CAST(NULL AS VARCHAR) AS dispensing_provider_npi,
+    CAST(
+        SUBSTRING(pde.SRVC_DT, 8, 4) || '-' ||
+        CASE
+            WHEN SUBSTRING(pde.SRVC_DT, 4, 3) = 'Jan' THEN '01'
+            WHEN SUBSTRING(pde.SRVC_DT, 4, 3) = 'Feb' THEN '02'
+            WHEN SUBSTRING(pde.SRVC_DT, 4, 3) = 'Mar' THEN '03'
+            WHEN SUBSTRING(pde.SRVC_DT, 4, 3) = 'Apr' THEN '04'
+            WHEN SUBSTRING(pde.SRVC_DT, 4, 3) = 'May' THEN '05'
+            WHEN SUBSTRING(pde.SRVC_DT, 4, 3) = 'Jun' THEN '06'
+            WHEN SUBSTRING(pde.SRVC_DT, 4, 3) = 'Jul' THEN '07'
+            WHEN SUBSTRING(pde.SRVC_DT, 4, 3) = 'Aug' THEN '08'
+            WHEN SUBSTRING(pde.SRVC_DT, 4, 3) = 'Sep' THEN '09'
+            WHEN SUBSTRING(pde.SRVC_DT, 4, 3) = 'Oct' THEN '10'
+            WHEN SUBSTRING(pde.SRVC_DT, 4, 3) = 'Nov' THEN '11'
+            WHEN SUBSTRING(pde.SRVC_DT, 4, 3) = 'Dec' THEN '12'
+            ELSE '00'
+        END || '-' || 
+        SUBSTRING(pde.SRVC_DT, 1, 2)
+        AS DATE
+    ) AS dispensing_date,
+    CAST(pde.PROD_SRVC_ID AS VARCHAR) AS ndc_code,
+    CAST(pde.QTY_DSPNSD_NUM AS INTEGER) AS quantity,
+    CAST(pde.DAYS_SUPLY_NUM AS INTEGER) AS days_supply,
+    CAST(NULL AS INTEGER) AS refills,
+    CAST(
+        SUBSTRING(pde.PD_DT, 8, 4) || '-' ||
+        CASE
+            WHEN SUBSTRING(pde.PD_DT, 4, 3) = 'Jan' THEN '01'
+            WHEN SUBSTRING(pde.PD_DT, 4, 3) = 'Feb' THEN '02'
+            WHEN SUBSTRING(pde.PD_DT, 4, 3) = 'Mar' THEN '03'
+            WHEN SUBSTRING(pde.PD_DT, 4, 3) = 'Apr' THEN '04'
+            WHEN SUBSTRING(pde.PD_DT, 4, 3) = 'May' THEN '05'
+            WHEN SUBSTRING(pde.PD_DT, 4, 3) = 'Jun' THEN '06'
+            WHEN SUBSTRING(pde.PD_DT, 4, 3) = 'Jul' THEN '07'
+            WHEN SUBSTRING(pde.PD_DT, 4, 3) = 'Aug' THEN '08'
+            WHEN SUBSTRING(pde.PD_DT, 4, 3) = 'Sep' THEN '09'
+            WHEN SUBSTRING(pde.PD_DT, 4, 3) = 'Oct' THEN '10'
+            WHEN SUBSTRING(pde.PD_DT, 4, 3) = 'Nov' THEN '11'
+            WHEN SUBSTRING(pde.PD_DT, 4, 3) = 'Dec' THEN '12'
+            ELSE '00'
+        END || '-' || 
+        SUBSTRING(pde.PD_DT, 1, 2)
+        AS DATE
+    ) AS paid_date,
+    CAST(pde.CVRD_D_PLAN_PD_AMT AS FLOAT) AS paid_amount,
+    CAST(pde.TOT_RX_CST_AMT AS FLOAT) AS allowed_amount,
+    CAST(pde.CVRD_D_PLAN_PD_AMT AS FLOAT) AS coinsurance_amount,
+    CAST(pde.NCVRD_PLAN_PD_AMT AS FLOAT) AS copayment_amount,
+    CAST(NULL AS FLOAT) AS deductible_amount,
+    'CMS Synthetic Medicare Enrollment, Fee-for-Service Claims, and Prescription Drug Event Data' AS data_source
+FROM {{ source('ffs', 'pde') }} pde

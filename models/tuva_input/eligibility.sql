@@ -292,7 +292,7 @@ SELECT DISTINCT
         END || '-' || 
         SUBSTRING(ffs.COVSTART, 1, 2)
     AS DATE) + 
-    (ffs.BENE_HI_CVRAGE_TOT_MONS * INTERVAL '1' MONTH) AS enrollment_end_date,
+    (CAST(ffs.BENE_HI_CVRAGE_TOT_MONS AS INT) * INTERVAL '1' MONTH) - INTERVAL '1' DAY AS enrollment_end_date,
     CAST(NULL AS VARCHAR) AS payer,
     'medicare' AS payer_type,
     CAST(NULL AS VARCHAR) AS plan,
@@ -303,8 +303,189 @@ SELECT DISTINCT
     CAST(NULL AS VARCHAR) AS last_name,
     CAST(NULL AS VARCHAR) AS address,
     CAST(NULL AS VARCHAR) AS city,
-    CAST(ffs.STATE_CODE AS VARCHAR) AS state,
+    CASE ffs.STATE_CODE
+        WHEN '01' THEN 'Alabama'
+        WHEN '02' THEN 'Alaska'
+        WHEN '03' THEN 'Arizona'
+        WHEN '04' THEN 'Arkansas'
+        WHEN '05' THEN 'California'
+        WHEN '06' THEN 'Colorado'
+        WHEN '07' THEN 'Connecticut'
+        WHEN '08' THEN 'Delaware'
+        WHEN '09' THEN 'District of Columbia'
+        WHEN '10' THEN 'Florida'
+        WHEN '11' THEN 'Georgia'
+        WHEN '12' THEN 'Hawaii'
+        WHEN '13' THEN 'Idaho'
+        WHEN '14' THEN 'Illinois'
+        WHEN '15' THEN 'Indiana'
+        WHEN '16' THEN 'Iowa'
+        WHEN '17' THEN 'Kansas'
+        WHEN '18' THEN 'Kentucky'
+        WHEN '19' THEN 'Louisiana'
+        WHEN '20' THEN 'Maine'
+        WHEN '21' THEN 'Maryland'
+        WHEN '22' THEN 'Massachusetts'
+        WHEN '23' THEN 'Michigan'
+        WHEN '24' THEN 'Minnesota'
+        WHEN '25' THEN 'Mississippi'
+        WHEN '26' THEN 'Missouri'
+        WHEN '27' THEN 'Montana'
+        WHEN '28' THEN 'Nebraska'
+        WHEN '29' THEN 'Nevada'
+        WHEN '30' THEN 'New Hampshire'
+        WHEN '31' THEN 'New Jersey'
+        WHEN '32' THEN 'New Mexico'
+        WHEN '33' THEN 'New York'
+        WHEN '34' THEN 'North Carolina'
+        WHEN '35' THEN 'North Dakota'
+        WHEN '36' THEN 'Ohio'
+        WHEN '37' THEN 'Oklahoma'
+        WHEN '38' THEN 'Oregon'
+        WHEN '39' THEN 'Pennsylvania'
+        WHEN '40' THEN 'Puerto Rico'
+        WHEN '41' THEN 'Rhode Island'
+        WHEN '42' THEN 'South Carolina'
+        WHEN '43' THEN 'South Dakota'
+        WHEN '44' THEN 'Tennessee'
+        WHEN '45' THEN 'Texas'
+        WHEN '46' THEN 'Utah'
+        WHEN '47' THEN 'Vermont'
+        WHEN '48' THEN 'Virgin Islands'
+        WHEN '49' THEN 'Virginia'
+        WHEN '50' THEN 'Washington'
+        WHEN '51' THEN 'West Virginia'
+        WHEN '52' THEN 'Wisconsin'
+        WHEN '53' THEN 'Wyoming'
+        WHEN '54' THEN 'Africa'
+        WHEN '55' THEN 'Asia'
+        WHEN '56' THEN 'Canada and Islands'
+        WHEN '57' THEN 'Central America and West Indies'
+        WHEN '58' THEN 'Europe'
+        WHEN '59' THEN 'Mexico'
+        WHEN '60' THEN 'Oceania'
+        WHEN '61' THEN 'Philippines'
+        WHEN '62' THEN 'South America'
+        WHEN '63' THEN 'U.S. Possessions'
+        WHEN '64' THEN 'American Samoa'
+        ELSE 'Unknown'
+    END AS state,
     CAST(ffs.ZIP_CD AS VARCHAR) AS zip_code,
     CAST(NULL AS VARCHAR) AS phone,
     'CMS Synthetic Medicare Enrollment, Fee-for-Service Claims, and Prescription Drug Event Data' AS data_source
 FROM {{ source('ffs', 'beneficiary') }} ffs
+
+UNION
+
+SELECT DISTINCT
+    CAST(desynpuf.DESYNPUF_ID AS VARCHAR) AS patient_id,
+    CAST(NULL AS VARCHAR) AS member_id,
+    CASE
+        WHEN desynpuf.BENE_SEX_IDENT_CD = '1' THEN 'male'
+        WHEN desynpuf.BENE_SEX_IDENT_CD = '2' THEN 'female'
+        ELSE 'unknown'
+    END AS gender,
+    CASE
+        WHEN desynpuf.BENE_RACE_CD = '1' THEN 'white'
+        WHEN desynpuf.BENE_RACE_CD = '2' THEN 'black or african american'
+        WHEN desynpuf.BENE_RACE_CD = '3' THEN 'other race'
+        WHEN desynpuf.BENE_RACE_CD = '4' THEN 'asian'
+        WHEN desynpuf.BENE_RACE_CD = '5' THEN 'hispanic'
+        WHEN desynpuf.BENE_RACE_CD = '6' THEN 'american indian or alaska native'
+        ELSE 'unknown'
+    END AS race,
+    CAST(SUBSTR(desynpuf.BENE_BIRTH_DT, 1, 4) || '-' || SUBSTR(desynpuf.BENE_BIRTH_DT, 5, 2) || '-' || SUBSTR(desynpuf.BENE_BIRTH_DT, 7, 2) AS DATE) AS birth_date,
+    CAST(SUBSTR(desynpuf.BENE_DEATH_DT, 1, 4) || '-' || SUBSTR(desynpuf.BENE_DEATH_DT, 5, 2) || '-' || SUBSTR(desynpuf.BENE_DEATH_DT, 7, 2) AS DATE) AS death_date,
+    CASE 
+        WHEN desynpuf.BENE_DEATH_DT IS NOT NULL THEN TRUE
+        ELSE FALSE
+    END AS death_flag,
+    CAST(desynpuf.YEAR || '-01-01' AS DATE) AS enrollment_start_date,
+    (CAST(
+        desynpuf.YEAR || '-01-01' AS DATE
+    ) + CAST(desynpuf.BENE_HI_CVRAGE_TOT_MONS AS INT) * INTERVAL '1' MONTH) - INTERVAL '1' DAY AS enrollment_end_date,
+    CAST(NULL AS VARCHAR) AS payer,
+    'medicare' AS payer_type,
+    CAST(NULL AS VARCHAR) AS plan,
+    CAST(NULL AS VARCHAR) AS original_reason_entitlement_code,
+    CAST(NULL AS VARCHAR) AS dual_status_code,
+    CASE desynpuf.BENE_ESRD_IND
+        WHEN 'Y' THEN '31'
+        WHEN '0' THEN '10'
+        ELSE NULL
+    END AS medicare_status_code,
+    CAST(NULL AS VARCHAR) AS first_name,
+    CAST(NULL AS VARCHAR) AS last_name,
+    CAST(NULL AS VARCHAR) AS address,
+    CAST(NULL AS VARCHAR) AS city,
+    CASE desynpuf.SP_STATE_CODE
+        WHEN '01' THEN 'Alabama'
+        WHEN '02' THEN 'Alaska'
+        WHEN '03' THEN 'Arizona'
+        WHEN '04' THEN 'Arkansas'
+        WHEN '05' THEN 'California'
+        WHEN '06' THEN 'Colorado'
+        WHEN '07' THEN 'Connecticut'
+        WHEN '08' THEN 'Delaware'
+        WHEN '09' THEN 'District of Columbia'
+        WHEN '10' THEN 'Florida'
+        WHEN '11' THEN 'Georgia'
+        WHEN '12' THEN 'Hawaii'
+        WHEN '13' THEN 'Idaho'
+        WHEN '14' THEN 'Illinois'
+        WHEN '15' THEN 'Indiana'
+        WHEN '16' THEN 'Iowa'
+        WHEN '17' THEN 'Kansas'
+        WHEN '18' THEN 'Kentucky'
+        WHEN '19' THEN 'Louisiana'
+        WHEN '20' THEN 'Maine'
+        WHEN '21' THEN 'Maryland'
+        WHEN '22' THEN 'Massachusetts'
+        WHEN '23' THEN 'Michigan'
+        WHEN '24' THEN 'Minnesota'
+        WHEN '25' THEN 'Mississippi'
+        WHEN '26' THEN 'Missouri'
+        WHEN '27' THEN 'Montana'
+        WHEN '28' THEN 'Nebraska'
+        WHEN '29' THEN 'Nevada'
+        WHEN '30' THEN 'New Hampshire'
+        WHEN '31' THEN 'New Jersey'
+        WHEN '32' THEN 'New Mexico'
+        WHEN '33' THEN 'New York'
+        WHEN '34' THEN 'North Carolina'
+        WHEN '35' THEN 'North Dakota'
+        WHEN '36' THEN 'Ohio'
+        WHEN '37' THEN 'Oklahoma'
+        WHEN '38' THEN 'Oregon'
+        WHEN '39' THEN 'Pennsylvania'
+        WHEN '40' THEN 'Puerto Rico'
+        WHEN '41' THEN 'Rhode Island'
+        WHEN '42' THEN 'South Carolina'
+        WHEN '43' THEN 'South Dakota'
+        WHEN '44' THEN 'Tennessee'
+        WHEN '45' THEN 'Texas'
+        WHEN '46' THEN 'Utah'
+        WHEN '47' THEN 'Vermont'
+        WHEN '48' THEN 'Virgin Islands'
+        WHEN '49' THEN 'Virginia'
+        WHEN '50' THEN 'Washington'
+        WHEN '51' THEN 'West Virginia'
+        WHEN '52' THEN 'Wisconsin'
+        WHEN '53' THEN 'Wyoming'
+        WHEN '54' THEN 'Africa'
+        WHEN '55' THEN 'Asia'
+        WHEN '56' THEN 'Canada and Islands'
+        WHEN '57' THEN 'Central America and West Indies'
+        WHEN '58' THEN 'Europe'
+        WHEN '59' THEN 'Mexico'
+        WHEN '60' THEN 'Oceania'
+        WHEN '61' THEN 'Philippines'
+        WHEN '62' THEN 'South America'
+        WHEN '63' THEN 'U.S. Possessions'
+        WHEN '64' THEN 'American Samoa'
+        ELSE 'Unknown'
+    END AS state,
+    CAST(NULL AS VARCHAR) AS zip_code,
+    CAST(NULL AS VARCHAR) AS phone,
+    'CMS 2008-2010 Data Entrepreneurs Synthetic Public Use File (DE-SynPUF)' AS data_source
+FROM {{ source('desynpuf', 'beneficiary') }} desynpuf
