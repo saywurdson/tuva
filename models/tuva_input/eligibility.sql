@@ -6,8 +6,9 @@
 {% set exists_professional_header_historical = check_table_exists('tx', 'professional_header_historical') %}
 {% set exists_pharmacy_header_current = check_table_exists('tx', 'pharmacy_header_current') %}
 {% set exists_pharmacy_header_historical = check_table_exists('tx', 'pharmacy_header_historical') %}
-{% set exists_beneficiary_ffs = check_table_exists('your_schema', 'beneficiary') %}
-{% set exists_beneficiary_desynpuf = check_table_exists('your_schema', 'beneficiary') %}
+{% set exists_beneficiary_ffs = check_table_exists('ffs', 'beneficiary') %}
+{% set exists_beneficiary_desynpuf = check_table_exists('desynpuf', 'beneficiary') %}
+{% set exists_patient_bcda = check_table_exists('bcda', 'patient') %}
 
 {% if exists_institutional_header_current %}
 SELECT DISTINCT
