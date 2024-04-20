@@ -3,3 +3,8 @@ name: needful_things
 type: duckdb
 options:
   filename: needful_things.duckdb
+
+name: claims
+type: duckdb
+options:
+  filename: /workspaces/claims_db/claims.db
