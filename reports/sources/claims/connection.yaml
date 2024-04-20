@@ -1,5 +1,5 @@
 # This file was automatically generated
-name: needful_things
+name: claims
 type: duckdb
 options:
-  filename: needful_things.duckdb
+  filename: /workspaces/claims_db/claims.db
