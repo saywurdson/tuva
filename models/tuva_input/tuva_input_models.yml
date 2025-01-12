@@ -233,7 +233,7 @@ models:
         - name: diagnosis_code_type
           description: The coding system used for the diagnosis code (e.g., ICD-10-CM, ICD-9-CM).
           type: TEXT
-              - name: diagnosis_code_1
+        - name: diagnosis_code_1
           description: 1st ICD (9 or 10) CM diagnosis code on the claim.
           type: TEXT
         - name: diagnosis_code_2
@@ -383,7 +383,7 @@ models:
         - name: diagnosis_poa_25
           description: Present on admission code for the 25th diagnosis on the claim.
           type: TEXT
-              - name: procedure_code_type
+        - name: procedure_code_type
           description: Indicates the type of procedure code (e.g. ICD-10-PCS).
           type: TEXT
         - name: procedure_code_1

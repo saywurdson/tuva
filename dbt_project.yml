@@ -3,12 +3,15 @@ version: '0.13.0'
 config-version: 2
 require-dbt-version: ">=1.5.0"
 
-profile: default
+profile: duckdb
 
 vars:
+
+    claims_enabled: true
+
     ## CCSR data mart vars
     # Set to "ip" for inpatient data or "op" for outpatient data (More info in the README)
-    record_type: "ip"
+    record_type: "op"
 
     # CCSR Version numbers from HCUP
     dxccsr_version: "'2023.1'"
