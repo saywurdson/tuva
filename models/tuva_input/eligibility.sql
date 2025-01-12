@@ -32,7 +32,7 @@ inst_current as (
                 '0'
             )
             else patient_account_number
-        end as patient_id,
+        end as person_id,
         cast(null as varchar) as member_id,
         cast(null as varchar) as subscriber_id,
         case
@@ -94,7 +94,7 @@ inst_historical as (
                 '0'
             )
             else patient_account_number
-        end as patient_id,
+        end as person_id,
         cast(null as varchar) as member_id,
         cast(null as varchar) as subscriber_id,
         case
@@ -156,7 +156,7 @@ prof_current as (
                 '0'
             )
             else patient_account_number
-        end as patient_id,
+        end as person_id,
         cast(null as varchar) as member_id,
         cast(null as varchar) as subscriber_id,
         case
@@ -218,7 +218,7 @@ prof_historical as (
                 '0'
             )
             else patient_account_number
-        end as patient_id,
+        end as person_id,
         cast(null as varchar) as member_id,
         cast(null as varchar) as subscriber_id,
         case
@@ -280,7 +280,7 @@ pharm_current as (
                 '0'
             )
             else patient_account_number
-        end as patient_id,
+        end as person_id,
         cast(null as varchar) as member_id,
         cast(null as varchar) as subscriber_id,
         case
@@ -342,7 +342,7 @@ pharm_historical as (
                 '0'
             )
             else patient_account_number
-        end as patient_id,
+        end as person_id,
         cast(null as varchar) as member_id,
         cast(null as varchar) as subscriber_id,
         case
