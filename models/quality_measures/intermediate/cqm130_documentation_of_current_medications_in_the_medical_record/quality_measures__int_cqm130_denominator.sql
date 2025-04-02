@@ -28,10 +28,12 @@ with visit_codes as (
             and coalesce(encounter.encounter_start_date,encounter.encounter_end_date) <= pp.performance_period_end
     where lower(encounter_type) in (
           'home health'
-        , 'office visit'
-        , 'outpatient'
-        , 'outpatient rehabilitation'
         , 'telehealth'
+    )
+    
+    or lower(encounter_group) in (
+          'office based'
+        , 'outpatient'
     )
 
 )
@@ -92,7 +94,7 @@ with visit_codes as (
                 then procedure_encounter_date
             else claims_encounter_date
           end as max_encounter_date
-        , {{ dbt.concat([
+        , {{ concat_custom([
               "coalesce(min(visit_enc), '')"
             , "coalesce(min(proc_enc), '')"
             , "coalesce(min(claim_enc), '')"
